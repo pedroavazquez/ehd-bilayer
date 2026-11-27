@@ -1,0 +1,756 @@
+% Physics of Fluids (AIP Publishing), REVTeX 4.2 with the aip and pof options.
+% First draft, 22 November 2026. The pof substyle is single column in REVTeX 4.2.
+\documentclass[aip,pof,reprint,amsmath,amssymb]{revtex4-2}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{bm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{placeins}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{xurl}
+
+\newcommand{\figfile}[2][width=\linewidth]{%
+  \IfFileExists{#2}{\includegraphics[#1]{#2}}{%
+    \fbox{\parbox[c][4cm][c]{0.8\linewidth}{\centering Missing figure:\\
+      \texttt{\detokenize{#2}}}}}}
+\newcommand{\bu}{\bm{u}}
+\newcommand{\bE}{\bm{E}}
+\newcommand{\dd}{\,\mathrm{d}}
+\newcommand{\jump}[1]{[\![#1]\!]}
+
+\begin{document}
+\makeatletter\immediate\write\@auxout{\string\citation{aipcontrol}}\makeatother
+
+\title{Oscillatory onset of electroconvection in two stacked layers of dielectric liquids}
+
+\author{Pedro A. V\'azquez}
+\email{pvazquez@us.es}
+\affiliation{Department of Applied Physics III, ETSI, Universidad de Sevilla,
+Camino de los Descubrimientos s/n, 41092 Sevilla, Spain}
+% TODO: co-authors to be decided.
+
+\date{First draft, 22 November 2026}
+
+\begin{abstract}
+Two layers of miscible dielectric liquids of different density, stacked between plane
+electrodes, become unstable when charge is injected from the lower electrode. Numerical
+simulations of this configuration show a threshold slightly above that of a single liquid
+and ripples near the interface at the onset of convection. Starting from the equations of
+two miscible liquids, we take the limit of infinite Schmidt number. The interface is then a
+sharp material surface, its jump conditions follow from the conservation laws, and the
+base state is steady. The interface conditions include gravity, the Maxwell stresses and
+the conservation of current. A kinematic argument shows that, once the interface feeds back
+on the flow, a stationary mode cannot carry fluid across it. With equal electrical
+properties the onset of a single roll spanning both layers is therefore a Hopf
+bifurcation for any stable stratification. The critical electric Rayleigh number grows
+linearly with the Grashof number for weak stratification and the frequency grows as its
+square root. Above a Grashof number of about 2140 a stationary mode made of two rows of
+co-rotating cells, separated by a motionless interface, becomes critical. Removing fluid
+inertia leaves the threshold and the frequency almost unchanged, while removing the
+transit-time lag of the injected charge suppresses the dependence on stratification. The
+ripples are thus transit-time oscillations of the charge, restored by gravity, and not an
+inertia--gravity oscillation. The threshold reported in the simulations corresponds to a
+Grashof number of about 13. The results are obtained with a two-domain Chebyshev method and
+confirmed with a finite-element solver, both through its eigenvalues and through time
+integration.
+\end{abstract}
+
+\maketitle
+
+%===========================================================================
+\section{Introduction}
+%===========================================================================
+
+A dielectric liquid between two electrodes becomes unstable when charge is injected from
+one of them and the electric Rayleigh number $T$ exceeds a critical value. The linear
+threshold of this electroconvection is classical. For strong injection it tends to
+$T_c\approx 160$, and for an injection level $C=10$ it is $T_c=164.1$
+\cite{AttenMoreau1972,Lacroix1975,Castellanos1998,Perez2014}. The instability is
+subcritical, and the motion is sustained down to a lower nonlinear threshold.
+
+Traor\'e \emph{et al.} \cite{Traore2024} studied a related configuration in which two
+miscible dielectric liquids fill the gap, one above the other. The lower liquid is the
+denser one, so the layer is stably stratified. Electroconvection mixes the two liquids
+much faster than molecular diffusion. Their simulations show two features that the
+single-liquid problem does not have. The forward threshold of convection is slightly
+higher than that of a single liquid ($T=167.8$ instead of $164$ for $C=10$). In addition,
+ripples appear near the initial interface during the growth of the instability. A
+semi-analytical model based on a single prescribed roll attributed the ripples to a
+competition between fluid inertia and gravity.
+
+These observations raise three questions. Why does the threshold depend on the
+stratification? What sets the frequency of the ripples? And what is the structure of the
+mode that becomes unstable? We answer them with a linear stability analysis in the limit of
+infinite Schmidt number. In this limit the concentration does not diffuse, the interface
+is sharp and the base state is steady, so the problem has normal modes. This distinguishes
+it from the simulations, where the interface spreads by diffusion and the base state
+depends on time.
+
+The interface displacement $\eta$ is governed by the kinematic condition
+$\partial_t\eta=v$. A stationary mode therefore has no velocity across the interface. This
+simple constraint organizes the whole problem. We show that, for equal electrical
+properties, any stable stratification turns the onset of a single roll into a Hopf
+bifurcation. The threshold increase is then set by the lag between the velocity field and
+the injected charge, which needs a finite time to cross the layer. The role of this
+transit time also governs the oscillatory modes of the single-liquid problem
+(P. A. V\'azquez and A. T. P\'erez, in preparation). Here it becomes the mechanism that
+controls the onset.
+
+The paper is organized as follows. Section~\ref{sec:formulation} starts from the
+dimensional equations of two miscible liquids, takes the limit of infinite Schmidt number,
+derives the interface conditions from the conservation laws and linearizes them about the
+base state. Section~\ref{sec:numerics} describes the
+numerical methods and their validation, including a finite-element verification. The
+results for equal electrical properties are given in Sec.~\ref{sec:results}, and
+Sec.~\ref{sec:discussion} discusses unequal properties, finite Schmidt numbers and the
+comparison with the simulations of Ref.~\onlinecite{Traore2024}.
+
+%===========================================================================
+\section{Formulation}\label{sec:formulation}
+%===========================================================================
+
+\subsection{Dimensional equations}
+
+Two miscible dielectric liquids fill the gap $0<y^*<H$ between plane electrodes
+(Fig.~\ref{fig:sketch}). The lower electrode, at potential $V_0$, injects charge of
+density $q_0$. The upper electrode is grounded. The problem is periodic in $x^*$, and
+asterisks denote dimensional variables. The local composition is described by the volume
+fraction $c$ of liquid~1, which is the reference liquid. Initially liquid~1 fills the upper
+half of the gap, $c=1$ for $y^*>H/2$, and the denser liquid~2 fills the lower half, $c=0$.
+
+\begin{figure}
+\figfile[width=0.55\linewidth]{figures/fig_sketch.pdf}
+\caption{Configuration. The lower liquid is the denser one. Charge is injected from the
+lower electrode, and the interface is displaced by $\eta(x,t)$.}
+\label{fig:sketch}
+\end{figure}
+
+The density, permittivity, ionic mobility and viscosity depend on the composition. We write
+them as $\rho(c)$, $\varepsilon(c)$, $K(c)$ and $\mu(c)$, with the values of liquid~1 at
+$c=1$ and those of liquid~2 at $c=0$. A linear mixing law between these values is the
+simplest choice, but in the limit studied below only the values of the pure liquids
+matter. In the Boussinesq approximation, with reference density $\rho_1$, the equations are
+\begin{align}
+&\nabla^*\!\cdot\bu^*=0,\label{eq:d_mass}\\
+&\rho_1\left(\partial_{t^*}\bu^*+\bu^*\cdot\nabla^*\bu^*\right)=-\nabla^*p^*
++\nabla^*\!\cdot\left[\mu\left(\nabla^*\bu^*+\nabla^*\bu^{*T}\right)\right]\nonumber\\
+&\qquad\qquad+q^*\bE^*-\tfrac12E^{*2}\nabla^*\varepsilon-\rho(c)\,g\,\hat{\bm y},
+\label{eq:d_ns}\\
+&\partial_{t^*}q^*+\nabla^*\!\cdot\left[q^*\left(\bu^*+K\bE^*\right)\right]=0,
+\label{eq:d_charge}\\
+&\nabla^*\!\cdot\left(\varepsilon\bE^*\right)=q^*,\qquad \bE^*=-\nabla^*V^*,
+\label{eq:d_gauss}\\
+&\partial_{t^*}c+\bu^*\cdot\nabla^*c=\mathcal{D}\,\nabla^{*2}c .\label{eq:d_conc}
+\end{align}
+The electric body force is the Korteweg--Helmholtz force without electrostriction, whose
+contribution is a gradient absorbed in the pressure. With Eq.~\eqref{eq:d_gauss} it is the
+divergence of the Maxwell stress,
+\begin{equation}
+q^*\bE^*-\tfrac12E^{*2}\nabla^*\varepsilon=\nabla^*\!\cdot\mathsf T^*_e,\qquad
+\mathsf T^*_e=\varepsilon\,\bE^*\bE^*-\tfrac12\varepsilon E^{*2}\,\mathsf I .
+\label{eq:d_maxwell}
+\end{equation}
+Charge diffusion is neglected, as usual for injection problems, and $\mathcal D$ is the
+molecular diffusivity of the two liquids into each other. The boundary conditions are
+$\bu^*=0$ on both electrodes, $V^*=V_0$ and $q^*=q_0$ at $y^*=0$, $V^*=0$ at $y^*=H$, and no
+flux of $c$ through the walls.
+
+\subsection{Dimensionless equations}
+
+We scale lengths with $H$, time with the drift time $H^2/(K_1V_0)$, velocities with
+$K_1V_0/H$, the potential with $V_0$, the charge density with $q_0$, the pressure with
+$\rho_1K_1^2V_0^2/H^2$, and the properties with those of liquid~1. The dimensionless
+properties are then $\varepsilon=K=\mu=1$ in liquid~1 and $\varepsilon_r$, $K_r$, $\mu_r$ in
+liquid~2. The parameters of the classical problem are built with liquid~1,
+\begin{equation}
+T=\frac{\varepsilon_1V_0}{\mu_1K_1},\qquad C=\frac{q_0H^2}{\varepsilon_1V_0},\qquad
+M=\frac{1}{K_1}\left(\frac{\varepsilon_1}{\rho_1}\right)^{1/2},
+\end{equation}
+as in Ref.~\onlinecite{Traore2024}. They give the ratios $\nu_1/(K_1V_0)=M^2/T$ of the
+drift time $H^2/(K_1V_0)$ to the viscous time $H^2/\nu_1$ and $q_0H^2/(\rho_1K_1^2V_0)=CM^2$ of the Coulomb force to
+inertia.
+
+The buoyancy term needs one more step. With $\rho(c)=\rho_1+\Delta\rho\,(1-c)$ and
+$\Delta\rho=\rho_2-\rho_1>0$, the gravity force per unit mass is
+$-g\hat{\bm y}-(g\Delta\rho/\rho_1)(1-c)\hat{\bm y}$. Its uniform part is absorbed in the
+pressure, and what remains is the buoyancy $(g\Delta\rho/\rho_1)\,c\,\hat{\bm y}$. In drift
+units its coefficient is
+\begin{equation}
+G=\frac{g\Delta\rho\,H^3}{\rho_1K_1^2V_0^2}=Gr\,\frac{M^4}{T^2},\qquad
+Gr=\frac{g\Delta\rho\,H^3}{\rho_1\nu_1^2}=\frac{Ra_S}{Sc},\qquad Sc=\frac{\nu_1}{\mathcal D},
+\end{equation}
+where $Gr$ is the Grashof number. It is the buoyancy parameter that appears when the
+velocity is scaled with $\nu_1/H$, as in Ref.~\onlinecite{Traore2024}, while $G$ is its
+counterpart in the drift scaling used here. The
+dimensionless equations are
+\begin{align}
+\partial_t\bu+\bu\cdot\nabla\bu&=-\nabla p+\frac{M^2}{T}\nabla\cdot\left[\mu\left(\nabla\bu+
+\nabla\bu^T\right)\right]+M^2\nabla\cdot\mathsf T_e+G\,c\,\hat{\bm y},\label{eq:ns}\\
+\partial_t q+\nabla\cdot\left[q\left(\bu+K\bE\right)\right]&=0,\label{eq:charge}\\
+\nabla\cdot\left(\varepsilon\bE\right)=Cq,\qquad \bE&=-\nabla\phi,\label{eq:poisson}\\
+\partial_tc+\bu\cdot\nabla c&=\kappa\nabla^2c,\qquad \kappa=\frac{M^2}{T\,Sc},
+\label{eq:conc}
+\end{align}
+with $\nabla\cdot\bu=0$, $\mathsf T_e=\varepsilon\bE\bE-\tfrac12\varepsilon E^2\mathsf I$ and
+$M^2\nabla\cdot\mathsf T_e=CM^2q\bE-\tfrac12M^2E^2\nabla\varepsilon$. The boundary conditions
+are $\bu=0$ on both electrodes, $\phi=1$ and $q=1$ at $y=0$, $\phi=0$ at $y=1$, and
+$\partial_yc=0$ on both walls. Unless stated otherwise we take $C=M=10$.
+
+\subsection{The limit of infinite Schmidt number}
+
+In the simulations of Ref.~\onlinecite{Traore2024} the Schmidt number is large, and in real
+liquids it is larger still. We consider the limit $Sc\to\infty$ at fixed $Gr$, so that
+$\kappa=0$ while the buoyancy stays finite. Equation~\eqref{eq:conc} then states that $c$
+is constant along fluid trajectories. Starting from the step profile, $c$ only takes the
+values $0$ and $1$, and the two liquids remain separated by a material surface $S$,
+$y=\tfrac12+\eta(x,t)$. The properties are constant on each side. In each layer the
+equations reduce to those of a single liquid,
+\begin{align}
+\partial_t\bu+\bu\cdot\nabla\bu&=-\nabla p+\nu\nabla^2\bu+CM^2q\bE+G\,c\,\hat{\bm y},
+\label{eq:ns_layer}\\
+\partial_tq+\bu\cdot\nabla q+K\bE\cdot\nabla q&=-\frac{KC}{\varepsilon}\,q^2,
+\label{eq:charge_layer}\\
+\varepsilon\nabla^2\phi&=-Cq,\label{eq:poisson_layer}
+\end{align}
+with $\nu=\mu M^2/T$ and $c$ equal to $0$ or $1$.
+
+The conditions on $S$ follow from integrating the conservation laws across a thin layer
+around $S$ and letting its thickness go to zero. All fields stay bounded in that layer.
+In particular the charge density is bounded, so the layer stores no surface charge. The
+liquids are miscible, so there is no surface tension. Let $\bm n$ be the normal pointing
+into the upper liquid, $V_n$ the normal velocity of $S$ and $\jump f$ the jump of $f$ from
+the lower to the upper side. Then
+\begin{align}
+&\jump{\bu}=0, \qquad V_n=\bu\cdot\bm n, &&\text{(velocity, kinematic)}\label{eq:j_kin}\\
+&\jump{\Sigma\cdot\bm n}=0, &&\text{(stress)}\label{eq:j_stress}\\
+&\jump{\phi}=0,\qquad \jump{\varepsilon\bE\cdot\bm n}=0, &&\text{(potential, displacement)}
+\label{eq:j_elec}\\
+&\jump{Kq\,\bE\cdot\bm n}=0, &&\text{(current)}\label{eq:j_current}
+\end{align}
+with the total stress $\Sigma=-p\,\mathsf I+\nu\left(\nabla\bu+\nabla\bu^T\right)+M^2\mathsf
+T_e$. The kinematic condition is Eq.~\eqref{eq:conc} with $\kappa=0$ applied to the
+discontinuity of $c$. The velocity is continuous because the viscous stress is bounded.
+The buoyancy is a bounded body force, so it does not enter Eq.~\eqref{eq:j_stress} directly.
+The stress condition contains the Maxwell stress, and with it the polarization force
+$-\tfrac12M^2E^2\nabla\varepsilon$, which is concentrated on $S$ when $\varepsilon$ jumps. In
+the current condition the convective flux $q(\bu\cdot\bm n-V_n)$ vanishes on both sides by
+the kinematic condition. These conditions are exact. They are linearized below.
+
+\subsection{Base state}
+
+The base state is at rest, with the interface flat. In each layer
+$(\varepsilon\bar E)'=C\bar q$, and the current $J=K\bar q\bar E$ is uniform. With
+$E_0=\bar E(0)$ and $J=K_rE_0$,
+\begin{align}
+\bar E^2&=E_0^2+\frac{2CE_0}{\varepsilon_r}\,y,&&0<y<\tfrac12,\\
+\bar E^2&=E_i^2+2CK_rE_0\left(y-\tfrac12\right),&&\tfrac12<y<1,
+\end{align}
+with $E_i=\varepsilon_r\bar E(\tfrac12^-)$ and $\bar q=J/(K\bar E)$. The value of $E_0$
+follows from $\int_0^1\bar E\dd y=1$. This is the analytical solution of
+Ref.~\onlinecite{Traore2024} written in a different notation. By
+Eqs.~\eqref{eq:j_elec}--\eqref{eq:j_current}, the normal displacement $\varepsilon\bar E$
+and the current are continuous at the interface, while $\bar E$ jumps when
+$\varepsilon_r\ne1$ and $\bar q$ jumps by the factor $K_r/\varepsilon_r$
+(Fig.~\ref{fig:base}).
+
+\begin{figure*}
+\figfile[width=\textwidth]{figures/fig_base.pdf}
+\caption{Base state for $C=10$. (a) Electric field. (b) Charge density. The interface is
+at $y=1/2$.}
+\label{fig:base}
+\end{figure*}
+
+In each layer the divergence of the Maxwell stress equals the Coulomb force,
+$M^2(\tfrac12\varepsilon\bar E^2)'=M^2\varepsilon\bar E\bar E'=CM^2\bar q\bar E$. The
+hydrostatic balance $\bar p'=CM^2\bar q\bar E+G\bar c$ then shows that the base normal stress
+$\bar\Sigma_{yy}=-\bar p+\tfrac12M^2\varepsilon\bar E^2$ satisfies
+\begin{equation}
+\bar\Sigma_{yy}'=-G\,\bar c .
+\label{eq:basestress}
+\end{equation}
+This identity is how gravity enters the normal-stress condition at the displaced
+interface.
+
+\subsection{Linear perturbations}
+
+We perturb the base state with normal modes proportional to $e^{ikx+\lambda t}$, and keep
+the notation $v$, $q$, $\phi$ for the amplitudes of the perturbations of the vertical
+velocity, the charge density and the potential.
+
+\paragraph*{Concentration.}
+The linearized form of Eq.~\eqref{eq:conc} is
+\begin{equation}
+\lambda c'=-v\,\bar c'+\kappa\,(D^2-k^2)\,c',
+\label{eq:lin_conc}
+\end{equation}
+with $D=\mathrm d/\mathrm dy$. For $\kappa=0$ and the step profile $\bar c=\Theta(y-\tfrac12)$, with $\Theta$ the Heaviside function,
+$\bar c'=\delta(y-\tfrac12)$, and the solution is
+\begin{equation}
+c'=-\eta\,\delta\!\left(y-\tfrac12\right),\qquad \lambda\eta=v(\tfrac12).
+\label{eq:kinematic}
+\end{equation}
+The concentration perturbation is a displacement of the interface. Its only degree of
+freedom is the amplitude $\eta$, and its evolution equation is the linearized kinematic
+condition. The buoyancy $G\,c'\,\hat{\bm y}$ is then a force concentrated on the interface.
+It appears in the normal-stress condition below, through Eq.~\eqref{eq:basestress}, and not
+in the bulk equations.
+
+\paragraph*{Bulk equations.}
+In each layer, with $\zeta=(D^2-k^2)v$, Eqs.~\eqref{eq:ns_layer}--\eqref{eq:poisson_layer}
+give
+\begin{align}
+\lambda\zeta&=\nu(D^2-k^2)\zeta-k^2CM^2\left(\bar E q+\bar q'\phi\right),\label{eq:lin_mom}\\
+\lambda q&=-\bar q'v-K\bar E\,Dq-\frac{2KC}{\varepsilon}\,\bar q\,q+K\bar q'\,D\phi,
+\label{eq:lin_charge}\\
+0&=\varepsilon(D^2-k^2)\phi+Cq .\label{eq:lin_poisson}
+\end{align}
+Equation~\eqref{eq:lin_mom} is the curl of the momentum equation, with the pressure
+eliminated. At the walls $v=Dv=0$ and $\phi=0$, and $q=0$ at the injector. The charge
+equation is hyperbolic, so no condition is imposed on $q$ at the collector.
+
+\paragraph*{Interface conditions.}
+The conditions \eqref{eq:j_kin}--\eqref{eq:j_current} hold on the displaced interface.
+We transfer them to $y=\tfrac12$ with $f(\tfrac12+\eta)\simeq\bar f(\tfrac12)+\hat f(\tfrac12)+
+\eta\bar f'(\tfrac12)$, where $\hat f$ is the perturbation, with normal $\bm n\simeq(-ik\eta,1)$ and tangent
+$\bm t\simeq(1,ik\eta)$. Velocity continuity gives $\jump v=0$ and, with the continuity
+equation $iku+Dv=0$, $\jump{Dv}=0$. The kinematic condition is
+Eq.~\eqref{eq:kinematic}. Continuity of the potential, $\jump{\bar\phi(\tfrac12+\eta)+\phi}=0$,
+and of the normal displacement give
+\begin{equation}
+\jump\phi=\eta\,\jump{\bar E},\qquad \jump{\varepsilon D\phi}=\eta\,\jump{(\varepsilon\bar E)'}
+=\eta\,C\jump{\bar q}.
+\label{eq:electric}
+\end{equation}
+The current condition gives $\jump{K(\bar qE_y+q\bar E)}+\eta\jump{(K\bar q\bar E)'}=0$, and
+the second term vanishes because the base current is uniform. Hence
+\begin{equation}
+\jump{K(\bar Eq-\bar q\,D\phi)}=0 .
+\label{eq:current}
+\end{equation}
+The tangential stress $\bm t\cdot\Sigma\cdot\bm n$ has a viscous part,
+$\jump{\nu(Du+ikv)}$, and an electric part,
+$M^2\jump{\varepsilon\bar E\,(E_x+ik\eta\bar E)}=ikM^2\varepsilon\bar E\,(-\jump\phi+
+\eta\jump{\bar E})$. The electric part vanishes by Eq.~\eqref{eq:electric}, because
+$\varepsilon E_n$ and $E_t$ are both continuous. The shear condition is then
+\begin{equation}
+\jump{\nu(\zeta+2k^2v)}=0 .
+\end{equation}
+The normal stress gives, with Eq.~\eqref{eq:basestress} and the pressure taken from the
+horizontal momentum equation (Appendix~\ref{app:normal}),
+\begin{equation}
+\jump{-\nu D\zeta+2\nu k^2Dv}+k^2CM^2\jump{\bar q\phi}-k^2M^2\jump{\varepsilon\bar E\,D\phi}
+=k^2G\,\eta .
+\label{eq:normalstress}
+\end{equation}
+The problem has fourteen constants of integration in the two layers and the unknown $\eta$.
+They are fixed by seven wall conditions and eight interface conditions, namely
+$\jump v=\jump{Dv}=0$, the shear and normal stresses, the kinematic condition, the two
+electric conditions \eqref{eq:electric} and the current condition \eqref{eq:current}.
+
+\subsection{A kinematic constraint}\label{sec:kinematic}
+
+For a stationary mode ($\lambda=0$), Eq.~\eqref{eq:kinematic} requires $v(\tfrac12)=0$.
+The interface can be displaced, but no fluid crosses it. This constraint matters whenever
+$\eta$ acts back on the flow. That happens through the normal stress when $Gr\ne0$, through
+the potential jump when $\varepsilon_r\ne1$ and through the displacement condition when
+$K_r\ne\varepsilon_r$. The viscosity ratio never involves $\eta$. Only for $Gr=0$ and
+$\varepsilon_r=K_r=1$ is the interface a passive marker.
+
+Two consequences follow. A single roll spanning both layers can only become unstable
+through a Hopf bifurcation. A stationary onset requires two rows of cells, one in each
+layer. The situation is analogous to double-diffusive convection when the stabilizing
+component does not diffuse \cite{Turner1973}.
+
+The constraint is a property of the limit $Sc\to\infty$. For finite $Sc$ a stationary mode
+only requires $v\,\bar c'=\kappa(D^2-k^2)c'$ in Eq.~\eqref{eq:lin_conc}. A vertical velocity
+across the interface can then be balanced by diffusion of the concentration.
+
+%===========================================================================
+\section{Numerical methods}\label{sec:numerics}
+%===========================================================================
+
+\subsection{Two-domain Chebyshev collocation}
+
+Each layer is discretized by Chebyshev collocation \cite{Trefethen2000} with $N+1$ points,
+and the two layers are coupled through the interface conditions. The generalized
+eigenvalue problem $A\bm x=\lambda B\bm x$ is solved with the QZ algorithm. Two choices are
+essential for accuracy.
+
+The first concerns the coordinate. With strong injection $E_0$ is small ($E_0=0.111$ for
+$C=10$). The field $\bar E(y)$ then has a branch point at $y^*=-E_0/2C=-0.0055$, just
+below the injector. The coefficient $K\bar E$ of the charge equation vanishes there, and
+the eigenfunctions inherit the singularity. We collocate in the local field $s=\bar E(y)$,
+that is $y=y_0+(s^2-a)/b$ in a layer where $\bar E^2=a+b(y-y_0)$. In this coordinate
+$K\bar E\,\partial_y=(Kb/2)\,\partial_s$. The charge is advected at constant speed, and
+the coefficients are regular.
+
+The second concerns the momentum equation. We keep $\zeta$ as an unknown instead of
+collocating $D^4$, whose condition number grows like $N^8$. At each wall the
+$\zeta$-definition row carries $v=0$ and the momentum row carries $Dv=0$. At the interface
+the same rows of each layer carry the four velocity and stress conditions.
+
+With collocation in $y$ and $D^4$, the leading eigenvalue changes at the $10^{-3}$ level
+when the matrix entries are perturbed at the $10^{-14}$ level. Chebyshev collocation of an
+advection operator with an inflow condition is exponentially non-normal
+\cite{TrefethenTrummer1987}, and the fourth-order operator amplifies the effect. With both
+choices the same test changes the eigenvalue by about $10^{-8}$, and no spurious mode
+appears. Table~\ref{tab:convergence} shows the convergence of the leading eigenvalue. We
+use $N=24$ per layer and keep only eigenvalues that persist at $N=32$.
+
+\begin{table}
+\caption{Leading eigenvalue for $C=M=10$, $T=159.73$, $k=2\pi/1.228$, equal properties and
+$Gr=0$, versus the number of points per layer.}
+\label{tab:convergence}
+\begin{ruledtabular}
+\begin{tabular}{rc}
+$N$ & $\sigma$\\\hline
+12 & $-0.1231781$\\
+16 & $-0.1235440$\\
+20 & $-0.1235831$\\
+24 & $-0.1235870$\\
+32 & $-0.1235874$\\
+60 & $-0.1235874$\\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+\subsection{Validation}
+
+Table~\ref{tab:validation} summarizes the tests. In the homogeneous limit the method
+reproduces the classical thresholds. Without space charge ($C\to0$) the interface supports
+damped gravity waves. Their frequency tends to the inviscid value
+$\omega^2=Gk/[\coth(k/2)+\coth(k/2)]$ with a correction of order $\nu^{1/2}$, the Stokes
+layer. For $Gr<0$ the Rayleigh--Taylor instability appears. With $\varepsilon_r\ne1$ and no
+space charge the interface is destabilized by the normal field. For equal depths the
+neutral condition is
+\begin{equation}
+G=M^2k\coth(k/2)\,\frac{\varepsilon_r(1-\varepsilon_r)^2}{1+\varepsilon_r}\,E_L^2,\qquad
+E_L=\frac{2}{1+\varepsilon_r},
+\end{equation}
+in agreement with Melcher \cite{Melcher1981}. These tests check the kinematic, gravity,
+potential-jump, displacement-jump and Maxwell normal-stress terms. The terms specific to
+$K_r\ne\varepsilon_r$ are only checked through the smooth-profile solver described below.
+
+\begin{table}
+\caption{Validation of the two-domain solver.}
+\label{tab:validation}
+\begin{ruledtabular}
+\begin{tabular}{lll}
+Test & Result & Reference\\\hline
+$T_c$, $C=5$ & 175.7101, $k_c=5.0413$ & 175.7, 5.041\\
+$T_c$, $C=10$ & 164.0614, $k_c=5.1125$ & 164.1 \cite{Perez2014}\\
+Gravity waves, $\nu=10^{-3},10^{-4},10^{-5}$ & $\omega/\omega_{\rm inv}=0.918,\,0.974,\,0.992$ & $1-O(\nu^{1/2})$\\
+Normal field, $\varepsilon_r=2$ & neutral $G$ within $2\times10^{-7}$ & Ref.~\onlinecite{Melcher1981}\\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+\subsection{Smooth interface}
+
+Simulations cannot represent a sharp interface. Without diffusion, however, any
+concentration profile $\bar c(y)$ at rest is an exact steady state. We therefore also
+solve the problem with
+\begin{equation}
+\bar c=\tfrac12\left[1+\tanh\left(\frac{y-\tfrac12}{\delta}\right)\right]
+\end{equation}
+and equal properties. For $\kappa=0$ the linearized concentration equation
+\eqref{eq:lin_conc} gives $c'=-\bar c'\xi$, with $\lambda\xi=v$ the vertical displacement,
+and the buoyancy adds the term $k^2G\,\bar c'\xi$ to Eq.~\eqref{eq:lin_mom}. The two domains are joined by plain continuity conditions. As
+$\delta\to0$, $\bar c'\to\delta(y-\tfrac12)$ and $\xi(\tfrac12)\to\eta$. The neutral point
+converges to the sharp-interface value as $\delta^2$ (Fig.~\ref{fig:delta}), which is an
+independent check of the interface conditions.
+
+Without diffusion the stratified fluid also has slow buoyancy modes. Their eigenvalues
+accumulate at $\lambda=0$, with exact zeros where $\bar c'$ underflows. The largest real
+part is therefore not a valid selector of the electroconvective mode, and we follow the
+oscillatory mode explicitly.
+
+\begin{figure}
+\figfile[width=0.55\linewidth]{figures/fig_delta.pdf}
+\caption{Relative difference between the neutral electric Rayleigh number of the smooth
+profile of thickness $\delta$ and that of the sharp interface, for $k=5$.}
+\label{fig:delta}
+\end{figure}
+
+\subsection{Finite-element verification}
+
+The finite-element solver of our study of the single-liquid problem uses
+Firedrake \cite{Rathgeber2016}. It is written in perturbation variables, with the
+residual of the perturbation defined as the difference between the residual of the total
+fields and that of the base state. The zero perturbation is then an exact discrete
+solution. We add the concentration field, governed by Eq.~\eqref{eq:conc} with
+$\kappa=0$, to the mixed space (Q2/Q1/Q1/Q2/Q2 for $\bu,p,q,\phi,c$) and the buoyancy force
+to the momentum equation, with $\delta=0.02$ and
+a mesh clustered near the interface. The domain is periodic with one wavelength
+($k=5$).
+
+The temporal eigenvalues are those of $-J\bm x=\lambda M\bm x$, where $J$ and $M$ are the
+Jacobian and the time-derivative matrix of the residual of the time stepper. Because of
+the cluster of buoyancy modes at $\lambda=0$, we use shift-invert Arnoldi with a complex
+shift close to the expected $i\omega$. The neutral $T$ follows from a secant iteration on
+$\mathrm{Re}\,\lambda$.
+
+Table~\ref{tab:firedrake} compares the results on a mesh of $62\times100$ elements with the
+Chebyshev values for the same profile. The frequencies agree within 0.3\%. The thresholds
+differ by $-0.29\%$ in the weakly stratified case. This is the discretization offset of
+the mesh, which is coarser in $x$ than our production mesh for the single liquid. Measured
+from that reference, the shift of the threshold caused by the stratification agrees within
+2\%.
+
+\begin{table}
+\caption{Neutral electric Rayleigh number and frequency (scaled with the drift time) of the Hopf mode for
+$\delta=0.02$ and $k=5$, from the finite-element eigenproblem ($62\times100$) and from the
+Chebyshev solver. $\Delta T_n=T_n(Gr)-T_n(0.1)$.}
+\label{tab:firedrake}
+\begin{ruledtabular}
+\begin{tabular}{rcccccc}
+ & \multicolumn{3}{c}{Finite elements} & \multicolumn{3}{c}{Chebyshev}\\
+$Gr$ & $T_n$ & $\omega$ & $\Delta T_n$ & $T_n$ & $\omega$ & $\Delta T_n$\\\hline
+0.1 & 163.735 & 0.1005 & --- & 164.204 & 0.1006 & ---\\
+10 & 166.583 & 0.9863 & 2.848 & 167.002 & 0.9872 & 2.798\\
+100 & 191.553 & 2.6826 & 27.818 & 191.677 & 2.6874 & 27.473\\
+1000 & 356.213 & 4.2387 & 192.48 & 355.631 & 4.2494 & 191.43\\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+The eigenvalues are confirmed by time integration of the full nonlinear perturbation
+equations (BDF2, $\Delta t=0.02$) from a small charge seed. The growth rate and frequency
+are fitted with the matrix-pencil method \cite{HuaSarkar1990} to the projection $a_c(t)$
+of the vertical velocity on the box wavenumber (Fig.~\ref{fig:firedrake}). On a mesh of
+$32\times40$ elements at $Gr=100$ and $T=192$, the eigenproblem gives
+$\lambda=0.024379+2.642578i$. The time integration gives $0.024217\pm2.640130i$ for a
+seed of norm $E_0=10^{-8}$ and $0.024214\pm2.640131i$ for $E_0=10^{-12}$. The independence
+of the amplitude confirms the linear regime. The remaining difference is the time error of
+BDF2 at $\omega\Delta t=0.053$.
+
+\begin{figure}
+\figfile[width=0.55\linewidth]{figures/fig_firedrake.pdf}
+\caption{Finite-element time integration at $Gr=100$, $T=192$, on a $32\times40$ mesh.
+Projection of the vertical velocity on the box wavenumber for two seed amplitudes, with the
+envelope given by the fitted growth rate.}
+\label{fig:firedrake}
+\end{figure}
+
+%===========================================================================
+\section{Results for equal electrical properties}\label{sec:results}
+%===========================================================================
+
+\subsection{Neutral curves and thresholds}
+
+Figure~\ref{fig:neutral} shows the neutral curves for several Grashof numbers. For
+$Gr>0$ the leading mode at small and moderate $k$ is oscillatory. The neutral curve
+rises with $Gr$ and its minimum moves to smaller $k$. At large $k$ the leading mode is
+stationary and its neutral curve does not depend on $Gr$. This is the two-tier mode of
+Sec.~\ref{sec:kinematic}. With equal properties and $v(\tfrac12)=0$, $\eta$ is decoupled
+from the electric problem, so gravity cannot act on this mode.
+
+\begin{figure}
+\figfile[width=0.55\linewidth]{figures/fig_neutral.pdf}
+\caption{Neutral curves of the leading mode. For $Gr>0$ only the oscillatory part is
+drawn. The dashed curve is the stationary two-tier mode, which does not depend on $Gr$.}
+\label{fig:neutral}
+\end{figure}
+
+The critical values are listed in Table~\ref{tab:critical} and shown in
+Fig.~\ref{fig:TcGr}. For any $Gr>0$ the onset is a Hopf bifurcation. For weak
+stratification
+\begin{equation}
+T_c-164.06\simeq0.295\,Gr,\qquad \omega_c\simeq0.317\,Gr^{1/2},
+\end{equation}
+with $\omega_c$ scaled with the drift time. The stationary two-tier mode has $T_c=477.68$ at
+$k_c=10.42$, about twice the wavenumber of the full-depth roll, as expected for cells of
+half the height. It becomes critical for $Gr>Gr^*=2137.6$. At $Gr^*$ the two modes have
+very different wavenumbers ($k=3.60$ for the oscillatory one).
+
+\begin{table}
+\caption{Critical points for equal properties, $C=M=10$. The frequency is scaled with the
+drift time. The last row is the stationary
+two-tier mode, which does not depend on $Gr$.}
+\label{tab:critical}
+\begin{ruledtabular}
+\begin{tabular}{rccc}
+$Gr$ & $T_c$ & $k_c$ & $\omega_c$\\\hline
+0 & 164.0614 & 5.1125 & 0\\
+0.1 & 164.0909 & 5.1122 & 0.1005\\
+1 & 164.3563 & 5.1093 & 0.3172\\
+10 & 167.0006 & 5.0825 & 0.9863\\
+100 & 192.0616 & 4.8743 & 2.6968\\
+1000 & 352.5673 & 4.0438 & 4.5180\\
+2137.6 & 477.6823 & 3.5954 & 4.7558\\\hline
+two-tier & 477.6823 & 10.4165 & 0\\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+\begin{figure*}
+\figfile[width=\textwidth]{figures/fig_Tc_Gr.pdf}
+\caption{(a) Critical electric Rayleigh number versus the Grashof number for the full
+model, without fluid inertia and without the transit-time lag of the charge. (b) Critical
+frequency scaled with the viscous time $H^2/\nu_1$ for the same three models.}
+\label{fig:TcGr}
+\end{figure*}
+
+\subsection{Structure of the modes}
+
+On the whole oscillatory branch the critical mode is a single roll spanning both layers
+(Fig.~\ref{fig:eigen}). The vertical velocity does not change sign across the depth and is
+largest near the interface. The two-tier mode is made of two rows of cells rotating in the
+same sense. At the interface both $v$ and $Dv$ vanish, so both velocity components are
+zero there. The interface acts as an internal no-slip wall.
+
+\begin{figure*}
+\figfile[width=\textwidth]{figures/fig_eigen.pdf}
+\caption{Critical eigenfunctions. (a) Modulus of the vertical velocity. (b) Streamlines of
+the Hopf mode at $Gr=100$ at one phase. (c) Streamlines of the stationary two-tier mode.
+Solid and dashed lines have opposite signs.}
+\label{fig:eigen}
+\end{figure*}
+
+\subsection{Mechanism}
+
+To identify the mechanism we remove, one at a time, the two sources of delay in the
+problem. Without fluid inertia ($\lambda\zeta$ dropped) the velocity is slaved to the
+forces. Without charge lag ($\lambda q$ dropped) the charge responds instantaneously to
+the velocity. The interface keeps its own dynamics, Eq.~\eqref{eq:kinematic}, in both
+cases. The results are given in Table~\ref{tab:mechanism} and Fig.~\ref{fig:TcGr}.
+
+\begin{table}
+\caption{Critical electric Rayleigh number and frequency (scaled with the drift time) for the full
+model, without fluid inertia and without charge lag.}
+\label{tab:mechanism}
+\begin{ruledtabular}
+\begin{tabular}{rcccccc}
+ & \multicolumn{2}{c}{Full} & \multicolumn{2}{c}{No inertia} & \multicolumn{2}{c}{No charge lag}\\
+$Gr$ & $T_c$ & $\omega_c$ & $T_c$ & $\omega_c$ & $T_c$ & $\omega_c$\\\hline
+10 & 167.00 & 0.99 & 167.45 & 1.08 & 164.15 & 2.47\\
+100 & 192.06 & 2.70 & 195.94 & 2.90 & 164.91 & 7.78\\
+1000 & 352.57 & 4.52 & 363.36 & 4.58 & 172.37 & 23.41\\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+Without inertia both the threshold and the frequency are almost unchanged. Without charge
+lag the threshold hardly depends on $Gr$, and the frequency becomes that of a much faster
+inertia--gravity oscillation. The onset is therefore controlled by three ingredients.
+The interface integrates the vertical velocity, gravity restores it, and the charge
+responds to the flow with the delay of its transit time. For $M=10$ the viscous
+relaxation of the flow is fast compared with this transit time, so inertia plays a
+minor role.
+
+A simple argument shows why the lag raises the threshold. In a one-roll model with
+instantaneous charge, as in Ref.~\onlinecite{Traore2024}, the amplitude obeys a damped
+oscillator equation whose damping changes sign at a value of $T$ independent of $Gr$.
+Gravity only sets the frequency. When the charge at height $y$ is created by the velocity
+at earlier times, the Coulomb coupling becomes a function of the growth rate,
+\begin{equation}
+a_2(\lambda)=\iint u_{0y}(y)\,u_{0y}(y')\,e^{-\lambda(y-y')\tau}\dd y'\dd y,
+\end{equation}
+with $\tau$ the transit time. At an oscillatory onset, $\lambda=i\omega$, the destabilizing
+part is $\mathrm{Re}\,a_2(i\omega)<a_2(0)$. The threshold then grows with the frequency,
+and hence with $Gr$.
+
+%===========================================================================
+\section{Discussion}\label{sec:discussion}
+%===========================================================================
+
+\subsection{Comparison with the simulations}
+
+The forward threshold $T=167.8$ reported in Ref.~\onlinecite{Traore2024} for $C=10$
+corresponds to $Gr=12.7$ in the present analysis. This value lies inside the range of
+$Ra_S/Sc$ explored in those simulations. The critical frequency is then $1.107$ when time
+is scaled with the drift time. With the viscous time $H^2/\nu_1$ the frequency is
+$\omega_cT_c/M^2=1.86$ and the period is $3.4$. The stratification alone explains the
+increase of the threshold, and the ripples are the Hopf mode of Sec.~\ref{sec:results}.
+
+Two differences must be kept in mind. The simulations have a finite Schmidt number, and
+the interface spreads by diffusion over a thickness of order $2(t/Sc)^{1/2}$. For
+$Sc=1000$ and $t\approx100$ this is comparable to the layer thickness at the onset of
+convection. Diffusion also allows stationary modes that carry fluid across the interface,
+because a vertical velocity can be balanced by diffusion of the concentration. Second, the
+backward branch of the bifurcation diagram of Ref.~\onlinecite{Traore2024} is computed
+after the liquids have mixed, so it corresponds to a homogeneous liquid.
+
+\subsection{Unequal electrical properties}
+
+The formulation and the solver include $\varepsilon_r$, $K_r$ and $\mu_r$. Two remarks are
+needed before using them. First, when $\varepsilon_r\ne1$ a sharp interface without surface
+tension is unstable at short wavelengths. The destabilizing normal-field stress grows like
+$k$, while gravity does not, so the problem at $Sc=\infty$ is ill-posed at large $k$. A
+real miscible interface is regularized at $k\sim1/\delta$, and the smooth-profile problem
+is then the relevant one. Second, the effective parameter used in
+Ref.~\onlinecite{Traore2024} to predict the effect of the property ratios rescales $T$ with
+averaged properties. It cannot account for the jump of the charge density, the jump of
+the field or the polarization stress at the interface, which the present formulation
+contains.
+
+\subsection{Finite Schmidt number}
+
+For finite $Sc$ the base profile $\bar c$ diffuses, the perturbation obeys the full
+Eq.~\eqref{eq:lin_conc}, and the stability problem is non-autonomous. The quasi-steady approximation, with a frozen profile, is accurate only
+when the growth rate is large compared with the rate of change of the base state. It fails
+close to the threshold \cite{TanHomsy1986,Riaz2006}, which is the regime of interest here.
+The natural tool is a non-modal analysis of the propagator over the time-dependent base
+state. The present results provide its starting point, since the problem with a frozen
+sharp interface is its limit at early times.
+
+\subsection{Realistic stratification}
+
+For a cell of one centimetre and a density contrast of a few percent, $Gr$ is of order
+$10^3$ to $10^5$. This is well above the values explored in the simulations, and close to
+or above $Gr^*$. In experiments the stationary two-tier mode may therefore be the relevant
+onset.
+
+%===========================================================================
+\section{Conclusions}
+%===========================================================================
+
+We have studied the linear stability of two stacked layers of dielectric liquids with
+unipolar injection, in the limit of no molecular diffusion. The kinematic condition at the
+interface forbids flow across it in a stationary mode as soon as the interface acts back
+on the flow. For equal electrical properties and any stable stratification, the onset of a
+single roll spanning both layers is then a Hopf bifurcation. Its threshold grows linearly
+with $Gr$ for weak stratification. Above $Gr^*=2137.6$ a stationary mode of two rows of
+co-rotating cells, separated by a motionless interface, becomes critical, with
+$T_c=477.68$ independent of $Gr$.
+
+The mechanism is not an inertia--gravity oscillation. The interface integrates the
+vertical velocity, gravity restores it, and the transit-time lag of the injected charge
+sets the frequency and the increase of the threshold. The threshold reported in the
+simulations of Ref.~\onlinecite{Traore2024} corresponds to $Gr\approx13$.
+
+The natural continuations are the study of unequal electrical properties with a diffuse
+interface, and a non-modal analysis of the time-dependent base state at finite Schmidt
+number.
+
+\begin{acknowledgments}
+% TODO
+\end{acknowledgments}
+
+\section*{Data availability}
+The solvers and the data supporting this study are openly available in the repository
+\url{https://github.com/pedroavazquez/nonLinearStabilityMonolithic}, in the folder
+\texttt{firedrake/two\_layer}.
+
+\appendix
+
+\section{Normal-stress condition}\label{app:normal}
+
+The total stress is $\Sigma=-p\,\mathsf I+\nu(\nabla\bu+\nabla\bu^{T})+M^2(\varepsilon\bE\bE-
+\tfrac12\varepsilon E^2\mathsf I)$, whose divergence in each layer gives the viscous,
+pressure and Coulomb terms of Eq.~\eqref{eq:ns_layer}. At the displaced interface
+$y=\tfrac12+\eta$ the normal stress is continuous. To linear order
+\begin{equation}
+\jump{\Sigma'_{yy}}+\eta\jump{\bar\Sigma_{yy}'}=0,
+\end{equation}
+and, by Eq.~\eqref{eq:basestress}, $\jump{\bar\Sigma_{yy}'}=-G$. The perturbation stress is
+$\Sigma'_{yy}=-p'+2\nu Dv-M^2\varepsilon\bar E\,D\phi$. The pressure follows from the
+horizontal momentum equation, $p'=k^{-2}[-\lambda+\nu(D^2-k^2)]Dv-CM^2\bar q\phi$. With
+$\jump{Dv}=0$ the term in $\lambda$ cancels, and Eq.~\eqref{eq:normalstress} follows.
+
+\bibliography{paper}
+
+\end{document}

@@ -7,3 +7,11 @@ restart
 *.ppm
 out.log
 err.log
+*.aux
+*.log
+*.out
+*.blg
+*.fls
+*.fdb_latexmk
+*Notes.bib
+__pycache__/

@@ -113,6 +113,8 @@ spent in the Poisson solver for the potential (see `-phitol`).
 * `validation/`: linear tests (`linear_tests.sh`) and their logs.
 * `examples/demo_T175/`: log and figures of the demonstration run.
 * `docs/`: validation notes and the comparison with the paper.
+* `stability/`: linear stability of the two-layer problem (Chebyshev collocation, numpy/scipy).
+* `paper/`: draft of the paper on the stability analysis (LaTeX source, data, figure scripts).
 
 ## Validation
 

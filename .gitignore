@@ -1,0 +1,9 @@
+bilayer
+bilayer_mpi
+_*.c
+runs/
+dump-*
+restart
+*.ppm
+out.log
+err.log
